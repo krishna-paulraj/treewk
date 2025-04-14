@@ -1,22 +1,33 @@
 import fs from "fs";
 import path from "path";
 
-export function explore(depth: number) {
-  console.log("todo explore", depth);
-  let dirPath = ".";
-
+function printFilesOnly(dirPath: string, depth: number = 0) {
   fs.readdir(dirPath, (err, files) => {
-    console.log(files);
+    if (err) {
+      console.error("Error reading directory:", err);
+      return;
+    }
 
     files.forEach((file) => {
-      if (fs.statSync(file).isDirectory()) {
-        dirPath = path.join(dirPath, file);
-        fs.readdir(dirPath, (err, files) => {
-          console.log(files);
-        });
-      }
+      const fullPath = path.join(dirPath, file);
 
-      console.log(file);
+      try {
+        const stats = fs.statSync(fullPath);
+
+        if (stats.isDirectory()) {
+          // Recursively explore subdirectories
+          printFilesOnly(fullPath, depth + 1);
+        } else if (stats.isFile()) {
+          // Print file with indentation
+          console.log("  ".repeat(depth) + file);
+        }
+      } catch (e) {
+        console.error("Error with:", fullPath, e);
+      }
     });
   });
+}
+
+export function explore() {
+  printFilesOnly(".");
 }
